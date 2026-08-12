@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SIO 대회 현황</title>
+<link rel="icon" href="icon-192.png">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700;800&family=Roboto+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --clay:#C6402C; --clay-dark:#A2331F; --navy:#1B2A41; --paper:#F7F6F3;
+    --ink:#1A1A1A; --lane:#F2B705; --mist:#E4E2DC; --white:#FFFFFF; --green:#2E7D4F;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0; padding:0; background:var(--paper); color:var(--ink); font-family:'Pretendard',sans-serif; height:100%;}
+  body{overscroll-behavior-y:none;}
+  .mono{font-family:'Roboto Mono',monospace;}
+  #app{max-width:520px; margin:0 auto; min-height:100vh; background:var(--paper);}
+
+  header.top{background:var(--navy); color:#fff; padding:16px 18px 14px; display:flex; align-items:center; gap:10px;}
+  header.top .bibtag{width:38px; height:38px; border-radius:8px; border:2px dashed var(--lane); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
+  header.top .bibtag span{font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:13px; color:var(--lane);}
+  header.top .crew{font-size:11px; opacity:0.6; letter-spacing:0.08em; text-transform:uppercase;}
+  header.top .name{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:20px;}
+
+  main{padding:16px 16px 40px;}
+  .section-title{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:22px; margin:4px 0 12px; display:flex; align-items:center; justify-content:space-between;}
+  .section-title .count{font-family:'Roboto Mono',monospace; font-size:13px; color:var(--clay); font-weight:600;}
+
+  .races-filter-bar{display:flex; gap:8px; margin:0 0 14px; min-width:0;}
+  .races-filter-bar select{flex:0 0 92px; min-width:0; padding:10px 6px; border-radius:9px; border:1.5px solid var(--mist); background:#fff; font-size:13.5px; font-family:'Pretendard',sans-serif; color:var(--ink);}
+  .races-filter-bar input{flex:1 1 0%; min-width:0; padding:10px 12px; border-radius:9px; border:1.5px solid var(--mist); background:#fff; font-size:14px; font-family:'Pretendard',sans-serif; color:var(--ink);}
+  .hide-past-toggle{display:flex; align-items:center; gap:7px; font-size:12.5px; color:#6b6660; margin:-4px 0 12px; user-select:none; cursor:pointer;}
+  .hide-past-toggle input{width:15px; height:15px; accent-color:var(--clay); cursor:pointer;}
+
+  .empty{border:1.5px dashed var(--mist); border-radius:14px; padding:36px 20px; text-align:center; color:#8a8680; font-size:14px;}
+  .empty b{display:block; font-family:'Barlow Condensed',sans-serif; font-size:19px; color:var(--ink); font-weight:700; margin-bottom:4px;}
+
+  .bib-card{background:var(--white); border-radius:14px; padding:14px 16px; margin-bottom:12px; position:relative; box-shadow:0 1px 3px rgba(0,0,0,0.06); border:1px solid var(--mist); cursor:pointer;}
+  .bib-card:active{transform:scale(0.99);}
+  .bib-card .row1{display:flex; align-items:flex-start; justify-content:space-between; gap:10px;}
+  .bib-card .rname{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:19px; line-height:1.2;}
+  .bib-card .rdate{font-family:'Roboto Mono',monospace; font-size:12.5px; color:#8a8680; margin-top:3px;}
+  .dday-badge{display:inline-block; font-family:'Roboto Mono',monospace; font-size:11px; font-weight:700; color:var(--clay); background:#FBE7E3; padding:2px 7px; border-radius:20px; margin-left:6px; vertical-align:middle;}
+  .bib-card.next-highlight{border:1.5px solid var(--clay); box-shadow:0 0 0 1px var(--clay), 0 0 14px rgba(198,64,44,0.55), 0 0 28px rgba(198,64,44,0.3); animation:card-glow-pulse 2.2s ease-in-out infinite;}
+  @keyframes card-glow-pulse{0%,100%{box-shadow:0 0 0 1px var(--clay), 0 0 14px rgba(198,64,44,0.55), 0 0 28px rgba(198,64,44,0.3);} 50%{box-shadow:0 0 0 1px var(--clay), 0 0 22px rgba(198,64,44,0.8), 0 0 40px rgba(198,64,44,0.45);}}
+  .next-tag{display:inline-block; font-family:'Roboto Mono',monospace; font-size:10.5px; font-weight:700; color:#fff; background:var(--clay); padding:2px 8px; border-radius:20px; margin-bottom:6px; letter-spacing:0.03em;}
+  .pill{display:inline-block; padding:3px 9px; border-radius:20px; font-size:11.5px; font-weight:600; font-family:'Roboto Mono',monospace; flex-shrink:0;}
+  .pill.k10{background:#E9F3EC; color:var(--green);}
+  .pill.half{background:#FFF1DC; color:#B5720B;}
+  .pill.full{background:#FBE7E3; color:var(--clay);}
+  .pill.etc{background:#EDEBFB; color:#5B4EBD;}
+  .pill-group{display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; max-width:150px;}
+  .bib-card .row2{margin-top:10px; padding-top:10px; border-top:1px dashed var(--mist); display:flex; justify-content:flex-start; flex-wrap:wrap; gap:6px; align-items:center; font-size:12.5px; color:#8a8680;}
+  .participants-badge{font-family:'Roboto Mono',monospace; color:var(--clay); font-weight:600;}
+  .names-inline{font-size:12px; color:#8a8680; word-break:break-word;}
+
+  .overlay{display:none; position:fixed; inset:0; background:rgba(20,18,16,0.5); z-index:50; align-items:flex-end; justify-content:center;}
+  .overlay.show{display:flex;}
+  .modal{background:var(--paper); width:100%; max-width:520px; border-radius:18px 18px 0 0; padding:20px 18px calc(20px + env(safe-area-inset-bottom)); max-height:88vh; overflow-y:auto;}
+  .modal h2{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:22px; margin:0 0 4px;}
+  .modal .sub{font-size:12.5px; color:#8a8680; margin-bottom:16px;}
+  .modal-close{position:absolute; top:14px; right:16px; background:none; border:none; font-size:22px; color:#a39d94; cursor:pointer;}
+  .modal-wrap{position:relative;}
+  .field{margin-bottom:12px;}
+  .field label{display:block; font-size:12.5px; font-weight:600; color:#6b6660; margin-bottom:5px;}
+  .memo-view{padding:11px 12px; border-radius:9px; border:1.5px solid var(--mist); background:#F2F0EC; font-size:15px; line-height:1.55; white-space:pre-wrap; word-break:break-word; min-height:44px; color:var(--ink);}
+  .memo-view.empty-memo{color:#a39d94;}
+  .memo-view a{color:var(--clay); text-decoration:underline; word-break:break-all;}
+  .link-row{display:flex; gap:8px; align-items:center;}
+  .link-open-btn{flex-shrink:0; white-space:nowrap; font-size:13px; font-weight:600; color:var(--clay); text-decoration:none; padding:10px 12px; border:1.5px solid var(--mist); border-radius:9px;}
+  .event-filter{display:flex; gap:6px; margin:10px 0 14px; flex-wrap:wrap;}
+  .ef-pill{font-family:'Roboto Mono',monospace; font-size:12px; font-weight:600; padding:6px 11px; border-radius:20px; border:1.5px solid var(--mist); background:#fff; color:#8a8680; cursor:pointer;}
+  .ef-pill.active{background:var(--navy); color:#fff; border-color:var(--navy);}
+  .participant-row{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--mist); font-size:14.5px;}
+  .participant-row:last-child{border-bottom:none;}
+  .participant-row .pn{font-weight:600;}
+  .participant-row .pe{font-family:'Roboto Mono',monospace; font-size:12px; color:#8a8680;}
+  .companion-note{font-weight:400; font-size:12.5px; color:#8a8680;}
+
+  .loading{position:fixed; inset:0; z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; background:var(--navy); color:rgba(255,255,255,0.7); font-size:13.5px;}
+  .track-loader-wrap{position:relative; width:270px; max-width:78vw; aspect-ratio:700/347;}
+  .track-loader-img{display:block; width:100%; height:100%; object-fit:contain;}
+  .track-loader-svg{position:absolute; inset:0; width:100%; height:100%;}
+  .runner-dot{fill:var(--clay); stroke:#fff; stroke-width:10; filter:drop-shadow(0 0 10px var(--clay)) drop-shadow(0 0 24px var(--clay)) drop-shadow(0 0 40px rgba(198,64,44,0.6)); opacity:0; animation:dot-appear 0.6s ease-out 1s forwards;}
+  @keyframes dot-appear{to{opacity:1;}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="top">
+    <div class="bibtag"><span>SIO</span></div>
+    <div>
+      <div class="crew">SIO RUNNING CREW</div>
+      <div class="name">대회 현황 (공개)</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="section-title">대회 전체 <span class="count" id="racesCount"></span></div>
+    <div class="races-filter-bar">
+      <select id="racesYearFilter"></select>
+      <input id="racesSearchInput" type="text" placeholder="대회명 검색">
+    </div>
+    <label class="hide-past-toggle"><input type="checkbox" id="racesHidePast" checked> 지난 대회 숨기기</label>
+    <div id="racesListContainer"></div>
+  </main>
+
+  <div class="loading" id="loadingScreen">
+    <div class="track-loader-wrap">
+      <img src="sio-track-mark.jpg" class="track-loader-img" alt="">
+      <svg class="track-loader-svg" viewBox="0 0 3327 1652" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+        <defs>
+          <path id="lane1" d="M 826,62 L 2501,62 A 764,764 0 1 1 2501,1591 L 826,1591 A 764,764 0 1 1 826,62 Z"/>
+          <path id="lane2" d="M 826,234 L 2501,234 A 592,592 0 1 1 2501,1418 L 826,1418 A 592,592 0 1 1 826,234 Z"/>
+          <path id="lane3" d="M 826,407 L 2501,407 A 420,420 0 1 1 2501,1246 L 826,1246 A 420,420 0 1 1 826,407 Z"/>
+        </defs>
+        <circle r="75" class="runner-dot">
+          <animateMotion dur="6.0s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear">
+            <mpath href="#lane1"/>
+          </animateMotion>
+        </circle>
+        <circle r="75" class="runner-dot">
+          <animateMotion dur="4.8s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear" begin="0.15s">
+            <mpath href="#lane2"/>
+          </animateMotion>
+        </circle>
+        <circle r="75" class="runner-dot">
+          <animateMotion dur="3.8s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear" begin="0.3s">
+            <mpath href="#lane3"/>
+          </animateMotion>
+        </circle>
+      </svg>
+    </div>
+    <div>불러오는 중…</div>
+  </div>
+</div>
+
+<!-- 대회 상세 (읽기 전용) -->
+<div class="overlay" id="raceOverlay">
+  <div class="modal modal-wrap">
+    <button class="modal-close" data-close="raceOverlay">✕</button>
+    <h2 id="raceTitle">대회명</h2>
+    <div class="sub" id="raceSub"></div>
+    <div class="event-filter" id="raceAllEventsRow"></div>
+
+    <div class="field">
+      <label>장소</label>
+      <div id="racePlaceText" class="memo-view"></div>
+    </div>
+    <div class="field">
+      <label>대회 링크</label>
+      <div class="link-row">
+        <div id="raceLinkText" class="memo-view" style="flex:1;"></div>
+        <a id="raceLinkOpen" href="#" target="_blank" rel="noopener" class="link-open-btn" style="display:none;">열기 ↗</a>
+      </div>
+    </div>
+    <div class="field">
+      <label>기타 대회 정보</label>
+      <div id="raceMemoView" class="memo-view"></div>
+    </div>
+
+    <h2 style="margin-top:22px; font-size:19px;">참가자</h2>
+    <div class="event-filter" id="raceEventFilter"></div>
+    <div id="raceParticipantList"></div>
+  </div>
+</div>
+
+<script>
+const CONFIG = {
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbzBVJf0N2LOS__B7oF7O9H2oNrTTrrtYaYnM0P4udjsI6mF42Eci4_bRX2fnviRAU_D/exec'
+};
+const EVENT_CLASS = { '10K':'k10', 'HALF':'half', 'FULL':'full' };
+
+let state = { races: [], entries: [] };
+let racesYearFilter = null;
+let racesSearchQuery = '';
+let raceParticipantFilter = 'all';
+
+async function apiGet(){
+  const res = await fetch(CONFIG.GAS_URL);
+  return res.json();
+}
+
+function escapeHtml(s){
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+function fmtDate(d){
+  if(!d) return '날짜 미정';
+  const dt = new Date(d);
+  if(isNaN(dt)) return String(d);
+  const days = ['일','월','화','수','목','금','토'];
+  return `${dt.getFullYear()}.${String(dt.getMonth()+1).padStart(2,'0')}.${String(dt.getDate()).padStart(2,'0')} (${days[dt.getDay()]})`;
+}
+function daysUntil_(d){
+  const dt = new Date(d);
+  if(isNaN(dt)) return null;
+  const today = new Date(); today.setHours(0,0,0,0);
+  dt.setHours(0,0,0,0);
+  return Math.round((dt-today)/86400000);
+}
+function ddayLabel_(d){
+  const diff = daysUntil_(d);
+  if(diff===null) return '';
+  if(diff===0) return 'D-DAY';
+  return diff>0 ? `D-${diff}` : `D+${Math.abs(diff)}`;
+}
+function eventLabel_(ev){
+  if(!ev) return '기타';
+  const m = ev.match(/기타\s*\((\d+(\.\d+)?)\s*km\)/i);
+  return m ? `${m[1]}K` : ev;
+}
+function normalizeEventKey_(ev){
+  if(!ev) return '기타';
+  const upper = ev.toUpperCase();
+  if(upper==='HALF') return 'HALF';
+  if(upper==='FULL') return 'FULL';
+  const m = ev.match(/(\d+(\.\d+)?)/);
+  if(m) return `${m[1]}K`;
+  return ev;
+}
+function eventDistanceKm_(ev){
+  if(!ev) return 9999;
+  const s = ev.toUpperCase();
+  if(s.includes('FULL')) return 42.2;
+  if(s.includes('HALF')) return 21.1;
+  if(s.includes('10K')) return 10;
+  const m = ev.match(/(\d+(\.\d+)?)/);
+  if(m) return parseFloat(m[1]);
+  return 9999;
+}
+function sortEvents_(events){
+  return events.slice().sort((a,b)=> eventDistanceKm_(a) - eventDistanceKm_(b) || a.localeCompare(b,'ko'));
+}
+function linkify(text){
+  const empty = !text || !text.trim();
+  const escaped = escapeHtml(text);
+  const urlRegex = /((https?:\/\/|www\.)[^\s<]+)/g;
+  const linked = escaped.replace(urlRegex, (match)=>{
+    const clean = match.replace(/[.,)]+$/,'');
+    const href = clean.startsWith('http') ? clean : 'https://'+clean;
+    return `<a href="${href}" target="_blank" rel="noopener">${clean}</a>`;
+  }).replace(/\n/g,'<br>');
+  return empty ? '정보 없음' : linked;
+}
+
+function open_(id){ document.getElementById(id).classList.add('show'); }
+function close_(id){ document.getElementById(id).classList.remove('show'); }
+document.querySelectorAll('[data-close]').forEach(b=>{
+  b.addEventListener('click', ()=>close_(b.getAttribute('data-close')));
+});
+
+function populateRacesYearFilter(){
+  const sel = document.getElementById('racesYearFilter');
+  const currentYear = new Date().getFullYear();
+  if(racesYearFilter === null) racesYearFilter = String(currentYear);
+  const years = new Set(
+    state.races.map(r=>{ const d = new Date(r.raceDate); return isNaN(d) ? null : d.getFullYear(); }).filter(Boolean)
+  );
+  years.add(currentYear);
+  const sortedYears = [...years].sort((a,b)=>b-a);
+  sel.innerHTML = `<option value="all">전체 연도</option>` + sortedYears.map(y=>`<option value="${y}">${y}년</option>`).join('');
+  sel.value = racesYearFilter;
+}
+document.getElementById('racesYearFilter').addEventListener('change', ()=>{
+  racesYearFilter = document.getElementById('racesYearFilter').value;
+  renderRacesList();
+});
+document.getElementById('racesSearchInput').addEventListener('input', ()=>{
+  racesSearchQuery = document.getElementById('racesSearchInput').value.trim();
+  renderRacesList();
+});
+document.getElementById('racesHidePast').addEventListener('change', renderRacesList);
+
+function renderRacesList(){
+  let races = state.races.slice();
+
+  if(racesYearFilter !== 'all'){
+    races = races.filter(r=>{ const d = new Date(r.raceDate); return !isNaN(d) && String(d.getFullYear())===racesYearFilter; });
+  }
+  if(racesSearchQuery){
+    const q = racesSearchQuery.toLowerCase();
+    races = races.filter(r=> (r.raceName||'').toLowerCase().includes(q));
+  }
+  if(document.getElementById('racesHidePast').checked){
+    races = races.filter(r=>{ const diff = daysUntil_(r.raceDate); return diff===null || diff>=0; });
+  }
+  races.sort((a,b)=> new Date(a.raceDate||'2999-01-01') - new Date(b.raceDate||'2999-01-01'));
+
+  document.getElementById('racesCount').textContent = `${races.length}개`;
+  const container = document.getElementById('racesListContainer');
+
+  if(races.length===0){
+    const reason = state.races.length===0 ? '등록된 대회가 아직 없어요' : '연도나 검색어를 확인해보세요';
+    container.innerHTML = `<div class="empty"><b>표시할 대회가 없어요</b>${reason}</div>`;
+    return;
+  }
+
+  const nextRaceId = races.find(r=>{ const diff = daysUntil_(r.raceDate); return diff!==null && diff>=0; })?.id;
+
+  container.innerHTML = races.map(r=>{
+    const raceEntries = state.entries.filter(e=>e.raceId===r.id);
+    const count = raceEntries.length;
+    const eventsForRace = sortEvents_([...new Set(raceEntries.map(e=>normalizeEventKey_(e.event)))]);
+    const pillsHtml = eventsForRace.length
+      ? eventsForRace.map(ev=>`<span class="pill ${EVENT_CLASS[ev]||'etc'}">${escapeHtml(eventLabel_(ev))}</span>`).join('')
+      : `<span class="pill etc">${escapeHtml(eventLabel_(r.event)||'종목 미정')}</span>`;
+    const namesInline = count
+      ? `<span class="names-inline">${escapeHtml(raceEntries.map(e=>e.name).sort((a,b)=>a.localeCompare(b,'ko')).join(', '))}</span>`
+      : '';
+    const dday = ddayLabel_(r.raceDate);
+    const isNext = r.id === nextRaceId;
+    return `<div class="bib-card${isNext?' next-highlight':''}" data-race="${r.id}">
+      ${isNext?'<div class="next-tag">🔥 다음 대회</div>':''}
+      <div class="row1">
+        <div><div class="rname">${r.raceName}${dday?`<span class="dday-badge">${dday}</span>`:''}</div><div class="rdate mono">${fmtDate(r.raceDate)}${r.time?' '+r.time:''} · ${r.place||'장소 미정'}</div></div>
+        <div class="pill-group">${pillsHtml}</div>
+      </div>
+      <div class="row2"><span class="participants-badge">참가 ${count}명</span>${namesInline}</div>
+    </div>`;
+  }).join('');
+
+  container.querySelectorAll('.bib-card').forEach(card=>{
+    card.addEventListener('click', ()=> openRaceModal(card.dataset.race));
+  });
+}
+
+function openRaceModal(raceId){
+  const race = state.races.find(r=>r.id===raceId);
+  if(!race) return;
+  raceParticipantFilter = 'all';
+
+  document.getElementById('raceTitle').textContent = race.raceName;
+  const timeStr = race.time ? ` ${race.time}` : '';
+  document.getElementById('raceSub').textContent = `${fmtDate(race.raceDate)}${timeStr}`;
+
+  const raceEntries = state.entries.filter(e=>e.raceId===race.id);
+  const allEvents = sortEvents_([...new Set(raceEntries.map(e=>normalizeEventKey_(e.event)))]);
+  document.getElementById('raceAllEventsRow').innerHTML = allEvents.length
+    ? allEvents.map(ev=>`<span class="ef-pill" style="pointer-events:none;">${escapeHtml(eventLabel_(ev))}</span>`).join('')
+    : '';
+
+  document.getElementById('racePlaceText').textContent = race.place || '장소 미정';
+  const linkVal = (race.link||'').trim();
+  document.getElementById('raceLinkText').innerHTML = linkVal ? linkify(linkVal) : '링크 없음';
+  const linkBtn = document.getElementById('raceLinkOpen');
+  if(linkVal){
+    linkBtn.href = linkVal.startsWith('http') ? linkVal : 'https://'+linkVal;
+    linkBtn.style.display = 'inline-block';
+  }else{
+    linkBtn.style.display = 'none';
+  }
+  const memoView = document.getElementById('raceMemoView');
+  memoView.innerHTML = linkify(race.memo||'');
+  memoView.classList.toggle('empty-memo', !(race.memo||'').trim());
+
+  renderParticipants(raceId);
+  open_('raceOverlay');
+}
+
+function renderParticipants(raceId){
+  const parts = state.entries.filter(e=>e.raceId===raceId);
+  const counts = {};
+  parts.forEach(p=>{ const key = normalizeEventKey_(p.event); counts[key] = (counts[key]||0)+1; });
+  const events = sortEvents_(Object.keys(counts));
+
+  const filterHtml = `<button class="ef-pill ${raceParticipantFilter==='all'?'active':''}" data-ev="all">전체 ${parts.length}</button>` +
+    events.map(ev=>`<button class="ef-pill ${raceParticipantFilter===ev?'active':''}" data-ev="${escapeHtml(ev)}">${escapeHtml(eventLabel_(ev))} ${counts[ev]}</button>`).join('');
+  const filterEl = document.getElementById('raceEventFilter');
+  filterEl.innerHTML = filterHtml;
+  filterEl.querySelectorAll('.ef-pill').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      raceParticipantFilter = btn.dataset.ev;
+      renderParticipants(raceId);
+    });
+  });
+
+  const filtered = (raceParticipantFilter==='all' ? parts : parts.filter(p=>normalizeEventKey_(p.event)===raceParticipantFilter))
+    .slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+  const list = document.getElementById('raceParticipantList');
+  list.innerHTML = filtered.length
+    ? filtered.map(p=>`<div class="participant-row"><span class="pn">${escapeHtml(p.name)}${p.note?`<span class="companion-note"> · ${escapeHtml(p.note)}</span>`:''}</span><span class="pe mono">${escapeHtml(eventLabel_(p.event))}</span></div>`).join('')
+    : `<div class="empty" style="padding:20px;">해당 종목 참가자가 없어요</div>`;
+}
+
+(async function init(){
+  try{
+    const data = await apiGet();
+    if(data.ok){
+      state.races = data.races || [];
+      state.entries = data.entries || [];
+    }
+  }catch(err){
+    console.error(err);
+  }
+  populateRacesYearFilter();
+  renderRacesList();
+  document.getElementById('loadingScreen').style.display = 'none';
+})();
+</script>
+</body>
+</html>
