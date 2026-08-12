@@ -19,8 +19,8 @@
   #app{max-width:520px; margin:0 auto; min-height:100vh; background:var(--paper);}
 
   header.top{background:var(--navy); color:#fff; padding:16px 18px 14px; display:flex; align-items:center; gap:10px;}
-  header.top .bibtag{width:38px; height:38px; border-radius:8px; border:2px dashed var(--lane); display:flex; align-items:center; justify-content:center; flex-shrink:0;}
-  header.top .bibtag span{font-family:'Barlow Condensed',sans-serif; font-weight:800; font-size:13px; color:var(--lane);}
+  header.top .bibtag{width:38px; height:38px; border-radius:8px; overflow:hidden; flex-shrink:0; background:#000;}
+  header.top .bibtag img{width:100%; height:100%; object-fit:contain;}
   header.top .crew{font-size:11px; opacity:0.6; letter-spacing:0.08em; text-transform:uppercase;}
   header.top .name{font-family:'Barlow Condensed',sans-serif; font-weight:700; font-size:20px;}
 
@@ -79,7 +79,7 @@
   .participant-row .pe{font-family:'Roboto Mono',monospace; font-size:12px; color:#8a8680;}
   .companion-note{font-weight:400; font-size:12.5px; color:#8a8680;}
 
-  .loading{position:fixed; inset:0; z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; background:var(--navy); color:rgba(255,255,255,0.7); font-size:13.5px;}
+  .loading{position:fixed; inset:0; z-index:200; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px; background:#000; color:rgba(255,255,255,0.8); font-size:17px; font-weight:600;}
   .track-loader-wrap{position:relative; width:270px; max-width:78vw; aspect-ratio:700/347;}
   .track-loader-img{display:block; width:100%; height:100%; object-fit:contain;}
   .track-loader-svg{position:absolute; inset:0; width:100%; height:100%;}
@@ -90,7 +90,7 @@
 <body>
 <div id="app">
   <header class="top">
-    <div class="bibtag"><span>SIO</span></div>
+    <div class="bibtag"><img src="icon-192.png" alt="SIO"></div>
     <div>
       <div class="crew">SIO RUNNING CREW</div>
       <div class="name">대회 현황 (공개)</div>
@@ -151,10 +151,7 @@
     </div>
     <div class="field">
       <label>대회 링크</label>
-      <div class="link-row">
-        <div id="raceLinkText" class="memo-view" style="flex:1;"></div>
-        <a id="raceLinkOpen" href="#" target="_blank" rel="noopener" class="link-open-btn" style="display:none;">열기 ↗</a>
-      </div>
+      <div id="raceLinkText" class="memo-view"></div>
     </div>
     <div class="field">
       <label>기타 대회 정보</label>
@@ -344,13 +341,6 @@ function openRaceModal(raceId){
   document.getElementById('racePlaceText').textContent = race.place || '장소 미정';
   const linkVal = (race.link||'').trim();
   document.getElementById('raceLinkText').innerHTML = linkVal ? linkify(linkVal) : '링크 없음';
-  const linkBtn = document.getElementById('raceLinkOpen');
-  if(linkVal){
-    linkBtn.href = linkVal.startsWith('http') ? linkVal : 'https://'+linkVal;
-    linkBtn.style.display = 'inline-block';
-  }else{
-    linkBtn.style.display = 'none';
-  }
   const memoView = document.getElementById('raceMemoView');
   memoView.innerHTML = linkify(race.memo||'');
   memoView.classList.toggle('empty-memo', !(race.memo||'').trim());
