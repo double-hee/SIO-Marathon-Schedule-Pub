@@ -93,7 +93,7 @@
     <div class="bibtag"><img src="sio-track-mark.jpg" alt="SIO"></div>
     <div>
       <div class="crew">SIO RUNNING CREW</div>
-      <div class="name">대회 현황 (공개)</div>
+      <div class="name">대회 현황</div>
     </div>
   </header>
 
@@ -374,19 +374,50 @@ function renderParticipants(raceId){
     : `<div class="empty" style="padding:20px;">해당 종목 참가자가 없어요</div>`;
 }
 
-(async function init(){
+const PUBLIC_CACHE_KEY = 'sio_public_cache_v1';
+
+function loadPublicCache_(){
+  try{
+    const raw = localStorage.getItem(PUBLIC_CACHE_KEY);
+    if(!raw) return false;
+    const cached = JSON.parse(raw);
+    state.races = cached.races || [];
+    state.entries = cached.entries || [];
+    return true;
+  }catch(e){ return false; }
+}
+function savePublicCache_(){
+  try{
+    localStorage.setItem(PUBLIC_CACHE_KEY, JSON.stringify({ races: state.races, entries: state.entries }));
+  }catch(e){}
+}
+
+async function loadData_(background){
   try{
     const data = await apiGet();
     if(data.ok){
       state.races = data.races || [];
       state.entries = data.entries || [];
+      savePublicCache_();
+      populateRacesYearFilter();
+      renderRacesList();
     }
   }catch(err){
     console.error(err);
   }
-  populateRacesYearFilter();
-  renderRacesList();
-  document.getElementById('loadingScreen').style.display = 'none';
+}
+
+(async function init(){
+  const hadCache = loadPublicCache_();
+  if(hadCache){
+    populateRacesYearFilter();
+    renderRacesList();
+    document.getElementById('loadingScreen').style.display = 'none';
+    loadData_(true); // 최신 데이터로 백그라운드 갱신
+  }else{
+    await loadData_(false);
+    document.getElementById('loadingScreen').style.display = 'none';
+  }
 })();
 </script>
 </body>
