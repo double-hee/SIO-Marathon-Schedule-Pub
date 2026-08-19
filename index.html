@@ -54,7 +54,10 @@
   .pill-group{display:flex; flex-wrap:wrap; gap:4px; justify-content:flex-end; max-width:150px;}
   .bib-card .row2{margin-top:10px; padding-top:10px; border-top:1px dashed var(--mist); display:flex; justify-content:flex-start; flex-wrap:wrap; gap:6px; align-items:center; font-size:12.5px; color:#8a8680;}
   .participants-badge{font-family:'Roboto Mono',monospace; color:var(--clay); font-weight:600;}
-  .names-inline{font-size:12px; color:#8a8680; word-break:break-word;}
+  .event-participant-list{margin-top:8px; padding-top:8px; border-top:1px dashed var(--mist);}
+  .event-participant-row{display:flex; gap:8px; padding:3px 0; font-size:12px; line-height:1.5;}
+  .event-participant-label{flex-shrink:0; width:42px; font-family:'Roboto Mono',monospace; font-weight:700; color:var(--clay);}
+  .event-participant-names{color:#6b6660; word-break:break-word;}
 
   .overlay{display:none; position:fixed; inset:0; background:rgba(20,18,16,0.5); z-index:50; align-items:flex-end; justify-content:center;}
   .overlay.show{display:flex;}
@@ -303,9 +306,17 @@ function renderRacesList(){
     const pillsHtml = eventsForRace.length
       ? eventsForRace.map(ev=>`<span class="pill ${EVENT_CLASS[ev]||'etc'}">${escapeHtml(eventLabel_(ev))}</span>`).join('')
       : `<span class="pill etc">${escapeHtml(eventLabel_(r.event)||'종목 미정')}</span>`;
-    const namesInline = count
-      ? `<span class="names-inline">${escapeHtml(raceEntries.map(e=>e.name).sort((a,b)=>a.localeCompare(b,'ko')).join(', '))}</span>`
-      : '';
+
+    const groupedByEvent = {};
+    raceEntries.forEach(e=>{
+      const key = normalizeEventKey_(e.event);
+      (groupedByEvent[key] = groupedByEvent[key] || []).push(e.name);
+    });
+    const byEventHtml = eventsForRace.map(ev=>{
+      const names = (groupedByEvent[ev]||[]).sort((a,b)=>a.localeCompare(b,'ko')).join(', ');
+      return `<div class="event-participant-row"><span class="event-participant-label">${escapeHtml(eventLabel_(ev))}</span><span class="event-participant-names">${escapeHtml(names)}</span></div>`;
+    }).join('');
+
     const dday = ddayLabel_(r.raceDate);
     const isNext = r.id === nextRaceId;
     return `<div class="bib-card${isNext?' next-highlight':''}" data-race="${r.id}">
@@ -314,7 +325,8 @@ function renderRacesList(){
         <div><div class="rname">${r.raceName}${dday?`<span class="dday-badge">${dday}</span>`:''}</div><div class="rdate mono">${fmtDate(r.raceDate)}${r.time?' '+r.time:''} · ${r.place||'장소 미정'}</div></div>
         <div class="pill-group">${pillsHtml}</div>
       </div>
-      <div class="row2"><span class="participants-badge">참가 ${count}명</span>${namesInline}</div>
+      <div class="row2"><span class="participants-badge">참가 ${count}명</span></div>
+      ${byEventHtml ? `<div class="event-participant-list">${byEventHtml}</div>` : ''}
     </div>`;
   }).join('');
 
@@ -367,7 +379,10 @@ function renderParticipants(raceId){
   });
 
   const filtered = (raceParticipantFilter==='all' ? parts : parts.filter(p=>normalizeEventKey_(p.event)===raceParticipantFilter))
-    .slice().sort((a,b)=>a.name.localeCompare(b.name,'ko'));
+    .slice().sort((a,b)=>
+      eventDistanceKm_(normalizeEventKey_(a.event)) - eventDistanceKm_(normalizeEventKey_(b.event))
+      || a.name.localeCompare(b.name,'ko')
+    );
   const list = document.getElementById('raceParticipantList');
   list.innerHTML = filtered.length
     ? filtered.map(p=>`<div class="participant-row"><span class="pn">${escapeHtml(p.name)}${p.note?`<span class="companion-note"> · ${escapeHtml(p.note)}</span>`:''}</span><span class="pe mono">${escapeHtml(eventLabel_(p.event))}</span></div>`).join('')
